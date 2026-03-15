@@ -35,7 +35,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
         const coffeesCollection = client.db('coffeeDB4631').collection('coffees');
-
+        const userCollection = client.db('coffeeDB4631').collection('users');
 
         app.get('/coffees', async (req, res) => {
             // const cursor = coffeesCollection.find();
@@ -82,12 +82,6 @@ async function run() {
 
         });
 
-
-
-
-
-
-
         app.delete('/coffees/:id', async (req, res) => {
 
             const id = req.params.id;
@@ -100,13 +94,55 @@ async function run() {
 
         });
 
+        // user related api
+
+        app.get("/users", async (req, res) => {
+            const result = await userCollection.find().toArray();
+
+            res.send(result)
+        });
+
+
+
+        app.post("/users", async (req, res) => {
+
+            const newUser = req.body;
+            console.log(newUser);
+            const result = await userCollection.insertOne(newUser);
+            res.send(result)
+        });
+
+        app.patch("/users", async (req, res) => {
+            console.log(req.body);
+            const { email, lastSignInTime } = req.body;
+            const filter = { email: email };
+
+            const updateDoc = {
+                $set: {
+                    lastSignInTime: lastSignInTime
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        });
+
+
+        app.delete("/users/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+
+            res.send(result)
+        });
+
+
+
+
         // Send a ping to confirm a successful connection
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-
-
 
 
     } finally {
@@ -115,9 +151,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-
-
 
 
 app.get('/', (req, res) => {
